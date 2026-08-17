@@ -1,0 +1,19 @@
+# Environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Checkpoints and Data
+checkpoints/
+data/
+*.pth
+*.pt
+*.bin
+
+# IDE settings
+.vscode/
+.idea/
