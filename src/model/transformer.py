@@ -1,3 +1,4 @@
+# src/model/transformer.py
 import torch
 import torch.nn as nn
 from src.config import LLMConfig
@@ -19,4 +20,4 @@ class InputEmbeddings(nn.Module):
         tok_out = self.tok_embed(input_ids) # Shape: [B, T, d_model]
         pos_out = self.pos_embed(pos)       # Shape: [T, d_model]
         
-        return tok_out + pos_out            # Broadcast addition -> Shape: [B, T, d_model]
+        return tok_out + pos_out            # Shape: [B, T, d_model]
