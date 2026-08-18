@@ -1,8 +1,9 @@
 # train.py
 import torch
+import torch.nn as nn
 from src.config import LLMConfig
 from src.tokenizer import Tokenizer
-from src.model.transformer import InputEmbeddings
+from src.model.transformer import InputEmbeddings, FeedForward
 from src.model.attention import MultiHeadAttention
 
 # 1. Setup & Embeddings
@@ -15,12 +16,18 @@ batch_ids = torch.stack([token_ids, token_ids], dim=0)
 embedding_layer = InputEmbeddings(config)
 x = embedding_layer(batch_ids)
 
-# 2. Module 3 Multi-Head Attention Test
-mha_layer = MultiHeadAttention(config)
-mha_output = mha_layer(x)
+# 2. Sub-layer 1: Pre-LN Multi-Head Attention + Residual
+ln_1 = nn.LayerNorm(config.d_model)
+mha = MultiHeadAttention(config)
+x_attn = x + mha(ln_1(x))
+
+# 3. Sub-layer 2: Pre-LN FeedForward + Residual
+ln_2 = nn.LayerNorm(config.d_model)
+ffn = FeedForward(config)
+x_out = x_attn + ffn(ln_2(x_attn))
 
 print(f"Input Shape: {x.shape}")
-print(f"MHA Output Shape: {mha_output.shape}")
+print(f"Sub-layer Output Shape: {x_out.shape}")
 
-assert mha_output.shape == x.shape
-print("Module 3 Passed Successfully!")
+assert x_out.shape == x.shape
+print("Module 4 Passed Successfully!")
