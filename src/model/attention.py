@@ -4,38 +4,50 @@ import torch
 import torch.nn as nn
 from src.config import LLMConfig
 
-class CausalSelfAttention(nn.Module):
+class MultiHeadAttention(nn.Module):
     def __init__(self, config: LLMConfig):
         super().__init__()
-        self.d_k = config.d_model
+        self.d_model = config.d_model
+        self.n_heads = config.n_heads
+        self.d_k = config.d_model // config.n_heads
         
-        # Linear projections for Query, Key, Value
-        self.w_q = nn.Linear(config.d_model, config.d_model, bias=False)
-        self.w_k = nn.Linear(config.d_model, config.d_model, bias=False)
-        self.w_v = nn.Linear(config.d_model, config.d_model, bias=False)
-        
-        # Causal mask: Lower triangular matrix of ones
-        # register_buffer ensures mask is saved with module state without being a parameter
+        assert config.d_model % config.n_heads == 0, "d_model must be divisible by n_heads"
+
+        # Combined QKV linear projection for efficiency
+        self.c_attn = nn.Linear(config.d_model, 3 * config.d_model, bias=False)
+        # Output projection
+        self.c_proj = nn.Linear(config.d_model, config.d_model, bias=False)
+
+        # Causal mask
         mask = torch.tril(torch.ones(config.max_seq_len, config.max_seq_len))
         self.register_buffer("mask", mask)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        B, T, d_model = x.shape
+        B, T, C = x.shape  # C = d_model
+
+        # 1. Compute Q, K, V in a single forward projection: [B, T, 3 * d_model]
+        qkv = self.c_attn(x)
         
-        # Compute Q, K, V projections
-        Q = self.w_q(x) # [B, T, d_model]
-        K = self.w_k(x) # [B, T, d_model]
-        V = self.w_v(x) # [B, T, d_model]
-        
-        # Compute scaled attention scores: [B, T, d_model] @ [B, d_model, T] -> [B, T, T]
-        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.d_k)
-        
-        # Apply causal mask: replace upper-triangular zeros with -infinity
+        # 2. Split Q, K, V: each becomes [B, T, d_model]
+        q, k, v = qkv.chunk(3, dim=-1)
+
+        # 3. Reshape for Multi-Head: [B, T, d_model] -> [B, T, n_heads, d_k] -> [B, n_heads, T, d_k]
+        q = q.view(B, T, self.n_heads, self.d_k).transpose(1, 2)
+        k = k.view(B, T, self.n_heads, self.d_k).transpose(1, 2)
+        v = v.view(B, T, self.n_heads, self.d_k).transpose(1, 2)
+
+        # 4. Scaled Dot-Product Attention: [B, n_heads, T, d_k] @ [B, n_heads, d_k, T] -> [B, n_heads, T, T]
+        scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_k)
+
+        # 5. Apply causal mask
         scores = scores.masked_fill(self.mask[:T, :T] == 0, float("-inf"))
-        
-        # Softmax along sequence dimension to get attention weights
-        attn_weights = torch.softmax(scores, dim=-1) # [B, T, T]
-        
-        # Weighted sum over values: [B, T, T] @ [B, T, d_model] -> [B, T, d_model]
-        output = torch.matmul(attn_weights, V)
-        return output
+
+        # 6. Softmax & weighted aggregation
+        attn_weights = torch.softmax(scores, dim=-1)
+        out = torch.matmul(attn_weights, v)  # [B, n_heads, T, d_k]
+
+        # 7. Concatenate heads: [B, n_heads, T, d_k] -> [B, T, n_heads, d_k] -> [B, T, d_model]
+        out = out.transpose(1, 2).contiguous().view(B, T, C)
+
+        # 8. Output projection: [B, T, d_model]
+        return self.c_proj(out)
