@@ -3,7 +3,7 @@ import torch
 from src.config import LLMConfig
 from src.tokenizer import Tokenizer
 from src.model.transformer import InputEmbeddings
-from src.model.attention import CausalSelfAttention
+from src.model.attention import MultiHeadAttention
 
 # 1. Setup & Embeddings
 config = LLMConfig()
@@ -15,12 +15,12 @@ batch_ids = torch.stack([token_ids, token_ids], dim=0)
 embedding_layer = InputEmbeddings(config)
 x = embedding_layer(batch_ids)
 
-# 2. Causal Self Attention Test
-attention_layer = CausalSelfAttention(config)
-attn_output = attention_layer(x)
+# 2. Module 3 Multi-Head Attention Test
+mha_layer = MultiHeadAttention(config)
+mha_output = mha_layer(x)
 
 print(f"Input Shape: {x.shape}")
-print(f"Attention Output Shape: {attn_output.shape}")
+print(f"MHA Output Shape: {mha_output.shape}")
 
-assert attn_output.shape == x.shape
-print("Module 2 Passed Successfully!")
+assert mha_output.shape == x.shape
+print("Module 3 Passed Successfully!")
