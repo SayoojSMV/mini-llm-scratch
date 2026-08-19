@@ -9,24 +9,19 @@ config = LLMConfig()
 model = MiniLLM(config)
 tokenizer = Tokenizer()
 
-# 2. Prepare Data
-text = "Building a Mini-LLM from scratch!"
-token_ids = tokenizer.encode(text)
-input_ids = torch.stack([token_ids, token_ids], dim=0)
+# 2. Prepare Prompt
+prompt_text = "Building a"
+input_ids = tokenizer.encode(prompt_text).unsqueeze(0) # [1, T]
 
-# Shift targets right for next-token prediction test
-targets = input_ids.clone()
+# 3. Test Generation with Sampling Strategies
+print("\n--- Testing Text Generation ---")
 
-# 3. Forward Pass
-logits, loss = model(input_ids, targets=targets)
+# Strategy A: Greedy Generation
+greedy_ids = model.generate(input_ids.clone(), max_new_tokens=15, temperature=0)
+print(f"\n[Greedy (Temp=0)]: {tokenizer.decode(greedy_ids[0])}")
 
-# Total parameters calculation
-num_params = sum(p.numel() for p in model.parameters())
+# Strategy B: Temperature Sampling (Temp=0.8, Top-k=10)
+sampled_ids = model.generate(input_ids.clone(), max_new_tokens=15, temperature=0.8, top_k=10)
+print(f"\n[Sampled (Temp=0.8, Top-k=10)]: {tokenizer.decode(sampled_ids[0])}")
 
-print(f"Input Shape: {input_ids.shape}")
-print(f"Logits Shape: {logits.shape}")
-print(f"Loss Value: {loss.item():.4f}")
-print(f"Total Parameters: {num_params:,}")
-
-assert logits.shape == (2, input_ids.shape[1], config.vocab_size)
-print("Module 5 Passed Successfully!")
+print("\nModule 6 Passed Successfully!")

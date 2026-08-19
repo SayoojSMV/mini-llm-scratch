@@ -1,4 +1,3 @@
-# src/model/transformer.py
 import torch
 import torch.nn as nn
 from src.config import LLMConfig
@@ -71,3 +70,51 @@ class MiniLLM(nn.Module):
             )
 
         return logits, loss
+
+    @torch.no_grad()
+    def generate(
+        self, 
+        input_ids: torch.Tensor, 
+        max_new_tokens: int = 20, 
+        temperature: float = 1.0, 
+        top_k: int = None
+    ) -> torch.Tensor:
+        """
+        Autoregressively generates new tokens given a context sequence.
+        """
+        self.eval()
+        for _ in range(max_new_tokens):
+            # Crop context sequence if it exceeds the model's maximum context length
+            idx_cond = input_ids if input_ids.size(1) <= self.config.max_seq_len else input_ids[:, -self.config.max_seq_len:]
+            
+            # 1. Forward model to get logits
+            logits, _ = self(idx_cond)
+            
+            # 2. Focus only on the last position: [B, vocab_size]
+            logits = logits[:, -1, :]
+            
+            # 3. Apply Temperature scaling
+            if temperature > 0:
+                logits = logits / temperature
+            
+            # 4. Apply Top-k filtering (optional)
+            if top_k is not None:
+                v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+                # Mask out any logit smaller than the top-k threshold
+                logits[logits < v[:, [-1]]] = float("-inf")
+            
+            # 5. Convert logits to probabilities
+            probs = nn.functional.softmax(logits, dim=-1)
+            
+            # 6. Sample next token index
+            if temperature == 0:
+                # Greedy decoding
+                idx_next = torch.argmax(probs, dim=-1, keepdim=True)
+            else:
+                # Multinomial sampling
+                idx_next = torch.multinomial(probs, num_samples=1)
+                
+            # 7. Append sampled index to sequence
+            input_ids = torch.cat((input_ids, idx_next), dim=1)
+
+        return input_ids
