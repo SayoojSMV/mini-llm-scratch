@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 from src.config import LLMConfig
@@ -118,3 +120,27 @@ class MiniLLM(nn.Module):
             input_ids = torch.cat((input_ids, idx_next), dim=1)
 
         return input_ids
+     
+
+    def save_checkpoint(self, filepath: str):
+        """Saves the model weights and configuration to a checkpoint file."""
+        import os
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        checkpoint = {
+        "config": self.config,
+        "state_dict": self.state_dict()
+        }
+        torch.save(checkpoint, filepath)
+        print(f"Checkpoint saved to {filepath}")
+
+    @classmethod
+    def load_checkpoint(cls, filepath: str, device: str = "cpu"):
+        """Loads a MiniLLM instance from a checkpoint file."""
+        checkpoint = torch.load(filepath, map_location=device, weights_only=False)
+        config = checkpoint["config"]
+        model = cls(config)
+        model.load_state_dict(checkpoint["state_dict"])
+        model.to(torch.device(device))
+        model.eval()
+        print(f"Checkpoint loaded from {filepath}")
+        return model
