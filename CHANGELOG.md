@@ -2,6 +2,18 @@
 
 All notable changes to the mini-llm-scratch project will be documented in this file.
 
+## [0.9.0] - Module 9 Complete (Instruction Fine-Tuning & Performance Optimization)
+### Added
+- Instruction fine-tuning pipeline (`finetune.py`) to transition the base model into an interactive instruction-following assistant.
+- Dataset processing script (`src/prepare_instruct_data.py`) to convert raw Alpaca JSON instruction sets into formatted `User:` / `Assistant:` prompt pairs.
+- Automatic Mixed Precision (`torch.amp`) integration across training and fine-tuning scripts to accelerate CUDA matrix calculations and lower VRAM consumption.
+- Asynchronous DataLoader features (`pin_memory=True`, `non_blocking=True`) to eliminate host-to-device memory transfer bottlenecks.
+
+### Changed
+- Updated `generate.py` to default to `checkpoints/instruct_model.pt` and automatically apply conversational prompt templates.
+- Added output post-processing to `generate.py` to truncate secondary turn generation and prevent model rambling.
+- Updated `.gitignore` to explicitly exclude dataset files (`.txt`, `.json`) and model checkpoints (`.pt`, `.pth`, `.bin`).
+
 ## [0.8.0] - Module 8 Complete
 ### Added
 - Checkpoint persistence utilities (save_checkpoint and load_checkpoint) in MiniLLM.
