@@ -3,6 +3,11 @@ venv/
 .venv/
 env/
 
+# Virtual Environment & Caches
+venv/
+__pycache__/
+.vscode/
+
 # Python cache
 __pycache__/
 *.py[cod]
@@ -17,3 +22,8 @@ data/
 # IDE settings
 .vscode/
 .idea/
+
+# Datasets
+data/
+*.json
+*.txt
