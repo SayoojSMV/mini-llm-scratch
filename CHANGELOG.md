@@ -4,12 +4,14 @@ All notable changes to the mini-llm-scratch project will be documented in this f
 
 ## [0.10.0] - Module 10 Complete (Retrieval-Augmented Generation)
 ### Added
-- Dense vector RAG retriever (`src/rag/retriever.py`) powered by `sentence-transformers` (`all-MiniLM-L6-v2`) and cosine similarity.
-- Local document indexing system targeting `data/knowledge_base/*.txt` chunks with relevance score thresholding (>0.25).
+- Dense vector RAG retriever (`src/rag/retriever.py`) powered by `sentence-transformers` (`all-MiniLM-L6-v2`) and PyTorch CUDA similarity calculations.
+- Local document indexing system targeting `data/knowledge_base/*.txt` chunks with automatic initialization and relevance score thresholding (>0.25).
+- Package initialization (`src/rag/__init__.py`) establishing the RAG submodule space.
 
 ### Changed
-- Updated `generate.py` to automatically retrieve top-k context snippets and inline them into `User:` prompts for zero-hallucination inference.
-- Lowered sampling temperature to `0.3` in RAG generation mode for strict factual context adherence.
+- Updated `generate.py` to automatically perform real-time retrieval and dynamically wrap context into natural instruction prompts (`User: Based on this information: '<context>', answer: <query>`).
+- Lowered default sampling temperature to `0.3` and narrowed `top_k` to `5` during RAG generation for strict factual grounding.
+- Enhanced output post-processing to isolate and display Assistant-only responses without leaking prompt templates or simulated turn continuations.
 
 ## [0.9.0] - Module 9 Complete (Instruction Fine-Tuning & Performance Optimization)
 ### Added
