@@ -12,8 +12,8 @@ A minimal, clean, and educational implementation of a GPT-style autoregressive L
 - **Inference & Sampling**: Autoregressive decoding loop supporting Greedy search, Temperature scaling, and Top-k filtering.
 - **Dataset Pipeline**: TextDataset chunking for autoregressive target-shifting with dataset preparation scripts.
 - **Instruction Tuning & Hardware Acceleration**: Supervised fine-tuning pipeline utilizing PyTorch AMP (`torch.amp`) for FP16 accelerated execution.
-- **Retrieval-Augmented Generation (RAG)**: Dense vector similarity search (`sentence-transformers`) that injects local knowledge base facts directly into generation prompts for grounded, factual responses.
-- **Persistence & CLI**: State dictionary checkpoint saving/loading and an interactive conversational RAG CLI interface (`generate.py`).
+- **Retrieval-Augmented Generation (RAG)**: Dense vector similarity search (`sentence-transformers`) that injects local knowledge base facts directly into generation prompts.
+- **Persistence & CLI**: State dictionary checkpoint saving/loading and an interactive conversational CLI interface (`generate.py`).
 
 ## Project Structure
 mini-llm-scratch/
@@ -30,7 +30,6 @@ mini-llm-scratch/
 │   │   ├── attention.py      # Multi-Head Causal Self-Attention
 │   │   └── transformer.py    # Full MiniLLM architecture & generation
 │   └── rag/
-│       ├── __init__.py       # RAG module package marker
 │       └── retriever.py      # SentenceTransformers vector embedding retriever
 ├── finetune.py               # Instruction fine-tuning pipeline (AMP optimized)
 ├── generate.py               # Interactive RAG CLI generation interface
