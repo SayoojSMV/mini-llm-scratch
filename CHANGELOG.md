@@ -2,6 +2,17 @@
 
 All notable changes to the mini-llm-scratch project will be documented in this file.
 
+## [0.11.0] - Module 11 Complete (Interactive Gradio Web Interface & Sampling Fixes)
+### Added
+- Web UI interface (`app.py`) built with Gradio v6 featuring real-time token streaming and dynamic RAG document management.
+- Dynamic Knowledge Base file uploader to index `.txt` files directly into vector storage without restarting the app.
+- Token-level repetition penalty in generation loop to prevent output degradation and loops.
+
+### Changed
+- Updated `gr.Chatbot` state management to support Gradio v6 message dictionary format (`{"role": "...", "content": "..."}`).
+- Raised default sampling temperature from `0.3` to `0.7` and broadened `top_k` to `40` for improved generation diversity.
+- Enforced prompt-template stop tokens (`<|endoftext|>`, `User:`, `Context:`) to clean up output and prevent template echoing.
+
 ## [0.10.0] - Module 10 Complete (Retrieval-Augmented Generation)
 ### Added
 - Dense vector RAG retriever (`src/rag/retriever.py`) powered by `sentence-transformers` (`all-MiniLM-L6-v2`) and PyTorch CUDA similarity calculations.
